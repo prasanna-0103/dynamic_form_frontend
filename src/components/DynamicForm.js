@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 
 // API URLs
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 
 const DynamicForm = () => {
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  console.log(BACKEND_URL);
   const [basicFields, setBasicFields] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
