@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-console.log(BACKEND_URL);
 
 const UserGrid = () => {
   const [users, setUsers] = useState([]);
@@ -14,18 +13,16 @@ const UserGrid = () => {
     category: "",
   });
   const [loading, setLoading] = useState(false);
-  const [searchClicked, setSearchClicked] = useState(false);
+  const [searchPerformed, setSearchPerformed] = useState(false); // Track search state
 
   useEffect(() => {
-    if (!searchClicked) return;
+    if (!searchPerformed) return; // Skip fetching if no search has been performed
 
     const fetchUsers = async () => {
       setLoading(true);
       try {
         const queryString = new URLSearchParams(searchParams).toString();
-        const response = await fetch(
-          `${BACKEND_URL}/api/search?${queryString}`
-        );
+        const response = await fetch(`${BACKEND_URL}/api/search?${queryString}`);
         const data = await response.json();
         setUsers(data.users);
       } catch (error) {
@@ -36,7 +33,7 @@ const UserGrid = () => {
     };
 
     fetchUsers();
-  }, [searchParams, searchClicked]);
+  }, [searchParams, searchPerformed]); // Include searchPerformed in dependency array
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,8 +45,7 @@ const UserGrid = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setSearchClicked(true);
-    // Triggers data fetch when form is submitted
+    setSearchPerformed(true); // Indicate a search has been performed
     setSearchParams((prevParams) => ({ ...prevParams }));
   };
 
@@ -78,7 +74,7 @@ const UserGrid = () => {
             value={searchParams.gender}
             onChange={handleChange}
           >
-            <option value="">Select Gender</option>
+            <option value="">Select Gender</option> {/* Default option */}
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
@@ -108,56 +104,53 @@ const UserGrid = () => {
         <button type="submit">Search</button>
       </form>
 
-      {loading && (
+      {loading ? (
         <div className="spinner">
           <div></div>
         </div>
-      )}
-
-      {searchClicked && !loading && (
-        <>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Email</th>
-                <th>Address</th>
-                <th>Category</th>
-                <th>Dynamic Fields</th>
+      ) : searchPerformed ? ( // Render table only after search is performed
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Gender</th>
+              <th>Email</th>
+              <th>Address</th>
+              <th>Category</th>
+              <th>Dynamic Fields</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>{user.name}</td>
+                <td>{user.age}</td>
+                <td>{user.gender}</td>
+                <td>{user.email}</td>
+                <td>{user.address}</td>
+                <td>{user.category}</td>
+                <td>
+                  <ul>
+                    {user.dynamic_fields.map((field, index) => (
+                      <li key={index}>
+                        {field.fieldName}: {field.fieldValue}
+                      </li>
+                    ))}
+                  </ul>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.name}</td>
-                  <td>{user.age}</td>
-                  <td>{user.gender}</td>
-                  <td>{user.email}</td>
-                  <td>{user.address}</td>
-                  <td>{user.category}</td>
-                  <td>
-                    <ul>
-                      {user.dynamic_fields.map((field, index) => (
-                        <li key={index}>
-                          {field.fieldName}: {field.fieldValue}
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <br />
-          <button>
-            <a href="/admin/createCategory" className="button">
-              Create Category
-            </a>
-          </button>
-        </>
-      )}
+            ))}
+          </tbody>
+        </table>
+      ) : null} {/* No table if no search */}
+
+      <br />
+      <button>
+        <a href="/admin/createCategory" className="button">
+          Create Category
+        </a>
+      </button>
     </div>
   );
 };

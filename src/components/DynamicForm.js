@@ -262,7 +262,7 @@ const DynamicForm = () => {
         ))
       )}
 
-      <h2>Category Selection</h2>
+<h2>Category Selection</h2>
       {categoriesLoading ? (
         <p className="loading">Loading categories...</p>
       ) : categoriesError ? (
@@ -314,24 +314,17 @@ const DynamicForm = () => {
                   onChange={(e) =>
                     handleInputChange(
                       `category-field-${field.id}`,
-                      e.target.value,
-                      field.field_type
+                      e.target.value
                     )
                   }
                   required={field.is_required}
                   className="input"
                 />
-                {formErrors[`category-field-${field.id}`] && (
-                  <p className="error">
-                    {formErrors[`category-field-${field.id}`]}
-                  </p>
-                )}
               </div>
             ))
           )}
         </>
       )}
-
       <div className="buttons">
         <button type="submit" className="submitButton">
           Submit
