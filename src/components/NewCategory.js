@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const AddCategoryForm = () => {
@@ -79,7 +80,7 @@ const AddCategoryForm = () => {
   };
 
   return (
-    <div>
+    <div className="container">
       <h2>Add New Category</h2>
       <form onSubmit={handleSubmit}>
         <div>
@@ -95,7 +96,7 @@ const AddCategoryForm = () => {
         </div>
 
         {fields.map((field, index) => (
-          <div key={index}>
+          <div key={index} className="field-group">
             <label htmlFor={`field-name-${index}`}>Field Name</label>
             <input
               type="text"
@@ -128,20 +129,22 @@ const AddCategoryForm = () => {
                 setFields(newFields);
               }}
             />
-            <button type="button" onClick={() => handleFieldRemove(index)}>
+            <button type="button" className="remove-field" onClick={() => handleFieldRemove(index)}>
               Remove Field
             </button>
           </div>
         ))}
 
-        <button type="button" onClick={handleFieldAdd}>
-          Add Field
-        </button>
-        <button type="submit">Submit</button>
+        <div className="buttons">
+          <button type="button" onClick={handleFieldAdd}>
+            Add Field
+          </button>
+          <button type="submit">Submit</button>
+        </div>
       </form>
 
-      {error && <p>{error}</p>}
-      {success && <p>{success}</p>}
+      {error && <p className="error">{error}</p>}
+      {success && <p className="success">{success}</p>}
     </div>
   );
 };

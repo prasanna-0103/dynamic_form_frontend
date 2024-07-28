@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 
-// API URLs
-
-
 const DynamicForm = () => {
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
   console.log(BACKEND_URL);
+
   const [basicFields, setBasicFields] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categoryFields, setCategoryFields] = useState([]);
   const [formData, setFormData] = useState({});
+  const [formErrors, setFormErrors] = useState({}); // State for tracking validation errors
 
   // Loading and Error state variables
   const [basicFieldsLoading, setBasicFieldsLoading] = useState(true);
@@ -94,8 +93,28 @@ const DynamicForm = () => {
   }, [selectedCategory]);
 
   // Handle input change
-  const handleInputChange = (fieldName, value) => {
+  const handleInputChange = (fieldName, value, fieldType) => {
+    // Perform validation based on field type
+    let error = "";
+
+    switch (fieldType) {
+      case "text":
+        if (/\d/.test(value)) { // Check if any number is present
+          error = "Text fields cannot contain numbers.";
+        }
+        break;
+      case "number":
+        if (isNaN(value) || value === '') {
+          error = "This field requires a valid number.";
+        }
+        break;
+      default:
+        break;
+    }
+
+    // Update form data and errors
     setFormData((prevFormData) => ({ ...prevFormData, [fieldName]: value }));
+    setFormErrors((prevErrors) => ({ ...prevErrors, [fieldName]: error }));
   };
 
   // Handle category selection
@@ -126,6 +145,14 @@ const DynamicForm = () => {
   // Handle form submission
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    // Check for any errors before submitting
+    const hasErrors = Object.values(formErrors).some((error) => error !== "");
+    if (hasErrors) {
+      console.error("Form has validation errors.");
+      return;
+    }
+
     setFormSubmitError(null);
     submitFormData(formData)
       .then((result) => {
@@ -145,6 +172,18 @@ const DynamicForm = () => {
     setCategoryFields([]);
   };
 
+  // Define the desired order of basic fields
+  const orderedFieldNames = ["name", "age", "gender", "email", "address"];
+
+  // Sort basic fields based on the desired order
+  const orderedBasicFields = basicFields
+    .filter((field) => orderedFieldNames.includes(field.column_name))
+    .sort(
+      (a, b) =>
+        orderedFieldNames.indexOf(a.column_name) -
+        orderedFieldNames.indexOf(b.column_name)
+    );
+
   return (
     <form onSubmit={handleSubmit} className="form">
       <h2>Basic Information</h2>
@@ -153,14 +192,30 @@ const DynamicForm = () => {
       ) : basicFieldsError ? (
         <p className="error">Error loading basic fields: {basicFieldsError}</p>
       ) : (
-        basicFields
-          .filter((field) => field.column_name !== "id")
-          .map((field) => (
-            <div key={field.column_name} className="fieldGroup">
-              <label htmlFor={field.column_name} className="label">
-                {field.column_name.charAt(0).toUpperCase() +
-                  field.column_name.slice(1)}
-              </label>
+        orderedBasicFields.map((field) => (
+          <div key={field.column_name} className="fieldGroup">
+            <label htmlFor={field.column_name} className="label">
+              {field.column_name.charAt(0).toUpperCase() +
+                field.column_name.slice(1)}
+            </label>
+            {field.column_name === "gender" ? (
+              // Render a dropdown for the gender field
+              <select
+                id={field.column_name}
+                value={formData[field.column_name] || ""}
+                onChange={(e) =>
+                  handleInputChange(field.column_name, e.target.value, field.data_type)
+                }
+                required
+                className="select"
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="transgender">Transgender</option>
+              </select>
+            ) : (
+              // Render input for other fields
               <input
                 type={
                   field.data_type === "integer"
@@ -172,15 +227,19 @@ const DynamicForm = () => {
                 id={field.column_name}
                 value={formData[field.column_name] || ""}
                 onChange={(e) =>
-                  handleInputChange(field.column_name, e.target.value)
+                  handleInputChange(field.column_name, e.target.value, field.data_type)
                 }
                 required={
                   field.data_type === "text" && field.column_name === "address"
                 }
                 className="input"
               />
-            </div>
-          ))
+            )}
+            {formErrors[field.column_name] && (
+              <p className="error">{formErrors[field.column_name]}</p>
+            )}
+          </div>
+        ))
       )}
 
       <h2>Category Selection</h2>
@@ -235,12 +294,18 @@ const DynamicForm = () => {
                   onChange={(e) =>
                     handleInputChange(
                       `category-field-${field.id}`,
-                      e.target.value
+                      e.target.value,
+                      field.field_type
                     )
                   }
                   required={field.is_required}
                   className="input"
                 />
+                {formErrors[`category-field-${field.id}`] && (
+                  <p className="error">
+                    {formErrors[`category-field-${field.id}`]}
+                  </p>
+                )}
               </div>
             ))
           )}
