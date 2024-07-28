@@ -27,9 +27,7 @@ const DynamicForm = () => {
       try {
         const response = await fetch(`${BACKEND_URL}/api/basicfields`);
         if (!response.ok)
-          throw new Error(
-            `Error fetching basic fields: ${response.statusText}`
-          );
+          throw new Error(`Error fetching basic fields: ${response.statusText}`);
         const data = await response.json();
         setBasicFields(data.fields);
       } catch (error) {
@@ -97,18 +95,40 @@ const DynamicForm = () => {
     // Perform validation based on field type
     let error = "";
 
-    switch (fieldType) {
-      case "text":
-        if (/\d/.test(value)) { // Check if any number is present
-          error = "Text fields cannot contain numbers.";
+    switch (fieldName) {
+      case "name":
+        if (/[^a-zA-Z\s]/.test(value)) { // Check if any special character is present
+          error = "Name cannot contain special characters.";
         }
         break;
-      case "number":
-        if (isNaN(value) || value === '') {
-          error = "This field requires a valid number.";
+      case "age":
+        if (!Number.isInteger(Number(value)) || value < 1 || value > 120) {
+          error = "Please enter a valid age between 1 and 120.";
         }
+        break;
+      case "email":
+        if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) { // Basic email regex
+          error = "Please enter a valid email address.";
+        }
+        break;
+      case "address":
+        // No specific validation for address as it can contain both text and numbers
         break;
       default:
+        switch (fieldType) {
+          case "text":
+            if (/\d/.test(value)) { // Check if any number is present
+              error = "Text fields cannot contain numbers.";
+            }
+            break;
+          case "number":
+            if (isNaN(value) || value === '') {
+              error = "This field requires a valid number.";
+            }
+            break;
+          default:
+            break;
+        }
         break;
     }
 
@@ -212,7 +232,7 @@ const DynamicForm = () => {
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
-                <option value="transgender">Transgender</option>
+                <option value="transgender">Other</option>
               </select>
             ) : (
               // Render input for other fields

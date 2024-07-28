@@ -40,17 +40,10 @@ const UserGrid = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setSearchParams((prevParams) => {
-      const newParams = { ...prevParams, [name]: value };
-      // Check if all fields are empty
-      const allFieldsEmpty = Object.values(newParams).every(
-        (param) => param === ""
-      );
-      if (allFieldsEmpty) {
-        setSearchClicked(false);
-      }
-      return newParams;
-    });
+    setSearchParams((prevParams) => ({
+      ...prevParams,
+      [name]: value,
+    }));
   };
 
   const handleSearch = (e) => {
@@ -80,13 +73,16 @@ const UserGrid = () => {
             value={searchParams.age}
             onChange={handleChange}
           />
-          <input
-            type="text"
+          <select
             name="gender"
-            placeholder="Gender"
             value={searchParams.gender}
             onChange={handleChange}
-          />
+          >
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
           <input
             type="email"
             name="email"
@@ -167,4 +163,3 @@ const UserGrid = () => {
 };
 
 export default UserGrid;
-
