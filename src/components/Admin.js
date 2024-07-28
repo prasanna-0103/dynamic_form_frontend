@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 console.log(BACKEND_URL);
+
 const UserGrid = () => {
   const [users, setUsers] = useState([]);
   const [searchParams, setSearchParams] = useState({
@@ -13,8 +14,11 @@ const UserGrid = () => {
     category: "",
   });
   const [loading, setLoading] = useState(false);
+  const [searchClicked, setSearchClicked] = useState(false);
 
   useEffect(() => {
+    if (!searchClicked) return;
+
     const fetchUsers = async () => {
       setLoading(true);
       try {
@@ -32,18 +36,26 @@ const UserGrid = () => {
     };
 
     fetchUsers();
-  }, [searchParams]);
+  }, [searchParams, searchClicked]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setSearchParams((prevParams) => ({
-      ...prevParams,
-      [name]: value,
-    }));
+    setSearchParams((prevParams) => {
+      const newParams = { ...prevParams, [name]: value };
+      // Check if all fields are empty
+      const allFieldsEmpty = Object.values(newParams).every(
+        (param) => param === ""
+      );
+      if (allFieldsEmpty) {
+        setSearchClicked(false);
+      }
+      return newParams;
+    });
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setSearchClicked(true);
     // Triggers data fetch when form is submitted
     setSearchParams((prevParams) => ({ ...prevParams }));
   };
@@ -100,57 +112,59 @@ const UserGrid = () => {
         <button type="submit">Search</button>
       </form>
 
-      {loading ? (
+      {loading && (
         <div className="spinner">
           <div></div>
         </div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Age</th>
-              <th>Gender</th>
-              <th>Email</th>
-              <th>Address</th>
-              <th>Category</th>
-              <th>Dynamic Fields</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.name}</td>
-                <td>{user.age}</td>
-                <td>{user.gender}</td>
-                <td>{user.email}</td>
-                <td>{user.address}</td>
-                <td>{user.category}</td>
-                <td>
-                  <ul>
-                    {user.dynamic_fields.map((field, index) => (
-                      <li key={index}>
-                        {field.fieldName}: {field.fieldValue} ({field.fieldType}
-                        )
-                      </li>
-                    ))}
-                  </ul>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       )}
-      <br />
-      <button>
-        <a href="/admin/createCategory" class="button">
-          Create Category
-        </a>
-      </button>
+
+      {searchClicked && !loading && (
+        <>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Category</th>
+                <th>Dynamic Fields</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.name}</td>
+                  <td>{user.age}</td>
+                  <td>{user.gender}</td>
+                  <td>{user.email}</td>
+                  <td>{user.address}</td>
+                  <td>{user.category}</td>
+                  <td>
+                    <ul>
+                      {user.dynamic_fields.map((field, index) => (
+                        <li key={index}>
+                          {field.fieldName}: {field.fieldValue}
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <br />
+          <button>
+            <a href="/admin/createCategory" className="button">
+              Create Category
+            </a>
+          </button>
+        </>
+      )}
     </div>
   );
 };
 
 export default UserGrid;
+
